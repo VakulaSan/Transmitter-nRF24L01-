@@ -4,16 +4,26 @@
 .include "include.inc"
 
 init:     Initialization
+          ldi     temp,   0xFF
+          out     DDRC,   temp
           
 lp:       cbi     PORTB, SS
-          ldi     temp,   0x55
-          out     SPDR,   temp
-          rcall wait_SPI_free
           ldi     temp,   0x33
           out     SPDR,   temp
-          rcall wait_SPI_free 
+          
+          rcall wait_SPI_free
+          sbi     PORTC, 3
+
+          ldi     temp,   0x33
+          out     SPDR,   temp
+          
+          rcall wait_SPI_free
+          
+          
           sbi     PORTB, SS 
-loop:     rjmp loop
+          sbi     PORTC, 3
+          
+loop:     rjmp lp
 
 
           
