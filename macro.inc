@@ -7,8 +7,10 @@
           ;-------Setup SPI
           ldi     temp,   (1<<SPIE) | (1<<SPE) | (1<<MSTR)
           out     SPCR,   temp
-          sbi     DDRB,   MOSI
-          sbi     DDRB,   SS
-          sbi     DDRB,   SCK
+          sbi     DDRB,   DDB3
+          sbi     DDRB,   DDB2
+          sbi     DDRB,   DDB5
+          sbi     DDRB,   DDB1
+          sbi     PORTB,  PB2
 .ENDMACRO
 

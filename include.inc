@@ -1,10 +1,11 @@
 .def       temp = R16
-#define    MISO   DDB4    
-#define    MOSI   DDB3
-#define    SS     DDB2
-#define    SCK    DDB5 
+.equ    MISO =  DDB4    
+.equ    MOSI =  DDB3
+.equ    SS   =  DDB2
+.equ    SCK  =  DDB5 
 
-
+;---------SPI waiting for 
+          rjmp    init
 wait_SPI_free:
           in      temp,   SPSR
           sbrs    temp,   SPIF
