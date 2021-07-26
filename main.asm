@@ -40,7 +40,7 @@ lp:       ldi     temp,   0xFF
           out     SPDR,   temp
           rcall wait_SPI_free         
           sbi     PORTB, SS 
-          
+          cbi     PORTB, CE
            
 loop:     rjmp lp
 
