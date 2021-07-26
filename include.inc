@@ -19,7 +19,7 @@ wp:       in      temp,   SPSR
           in      temp,   SPDR
           ret
 
-delay:   ldi    temp1,  3
+delay:   ldi    temp1,  2
 
 lp0:      dec     temp1
           breq    exit
