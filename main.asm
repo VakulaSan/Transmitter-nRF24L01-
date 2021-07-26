@@ -7,7 +7,7 @@ init:     Initialization
           ldi     temp,   0xFF
           out     DDRC,   temp
 
-          rcall delay
+          
           
           cbi     PORTB, SS
           ldi     temp,   (W_REGISTER) | (CONFIG)
@@ -31,7 +31,7 @@ init:     Initialization
           sbi     PORTB, SS 
           sbi     PORTC, 3
           sbi     PORTB,  CE
-          rcall   delay  
+           
 loop:     rjmp loop
 
 
