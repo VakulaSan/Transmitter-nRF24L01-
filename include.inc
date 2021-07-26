@@ -3,11 +3,12 @@
 .def      temp2 = R18
 .def      temp3 = R18
 
-.equ    MISO =  4    
-.equ    MOSI =  3
+.equ    CE   =  1 
 .equ    SS   =  2
+.equ    MOSI =  3
+.equ    MISO =  4   
 .equ    SCK  =  5 
-.equ    CE   =  1     
+    
 
 ;---------SPI waiting for 
           rjmp    init
