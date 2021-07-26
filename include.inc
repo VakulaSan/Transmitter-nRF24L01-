@@ -4,7 +4,7 @@
 .def      temp3 = R18
 
 .equ    MISO =  4    
-.equ    MOSI =  4
+.equ    MOSI =  3
 .equ    SS   =  2
 .equ    SCK  =  5 
 .equ    CE   =  1     
@@ -12,13 +12,14 @@
 ;---------SPI waiting for 
           rjmp    init
 wait_SPI_free:
-          in      temp,   SPSR
+wp:       in      temp,   SPSR
           sbrs    temp,   SPIF
-          rjmp    wait_SPI_free
+          rjmp    wp
           in      temp,   SPDR
           ret
 
-delay:   ldi     temp1,  3
+delay:   ldi    temp1,  3
+
 lp0:      dec     temp1
           breq    exit
           ldi     temp2,  255
@@ -29,5 +30,3 @@ lp3:	     dec     temp3
           breq    lp2
           rjmp    lp3
 exit:      ret
-
-
