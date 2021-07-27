@@ -11,3 +11,21 @@
           out     DDRB,   temp
           
 .ENDMACRO
+.MACRO Send_command_ command, data
+
+
+
+.ENDMACRO
+
+.MACRO Read_command_ , data
+          ldi     temp,   (@0 | R_REGISTER)
+          push    temp 
+          ldi     temp,   @1          
+          push    temp
+          rcall   read_nrf_command
+          pop     temp
+          pop     temp
+
+
+
+.ENDMACRO

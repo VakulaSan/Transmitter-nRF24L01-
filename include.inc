@@ -10,8 +10,10 @@
 .equ    SCK  =  5 
     
 
-;---------SPI waiting for 
+
           rjmp    init
+
+;---------SPI waiting for 
 wait_SPI_free:
 wp:       in      temp,   SPSR
           sbrs    temp,   SPIF
@@ -19,6 +21,7 @@ wp:       in      temp,   SPSR
           in      temp,   SPDR
           ret
 
+;--------Delay
 delay:   ldi    temp1,  3
 
 lp0:      dec     temp1
@@ -30,4 +33,13 @@ lp2:	     dec     temp2
 lp3:	     dec     temp3 
           breq    lp2
           rjmp    lp3
-exit:      ret
+exit:     ret
+
+;---------Read nRF24L01+ register
+read_nrf_command:
+          push    ZH
+          push    ZL
+          in      ZL,     SPH
+          in      ZH,     SPL
+          
+          
