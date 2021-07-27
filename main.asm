@@ -43,9 +43,8 @@ lp:       ldi     temp,   0xFF
 
 
           sbi     PORTB,  CE
-          sbi     PORTC,  3 
-          
-loop:     rjmp lp
+           
+loop:     rjmp loop
 
 
           

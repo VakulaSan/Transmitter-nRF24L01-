@@ -1,7 +1,7 @@
 .def      temp = R16
 .def      temp1 = R17
 .def      temp2 = R18
-.def      temp3 = R18
+.def      temp3 = R19
 
 .equ    CE   =  1 
 .equ    SS   =  2
