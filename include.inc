@@ -22,7 +22,7 @@ wp:       in      temp,   SPSR
           ret
 
 ;--------Delay
-delay:   ldi    temp1,  3
+delay:   ldi    temp1,  2
 
 lp0:      dec     temp1
           breq    exit
@@ -37,9 +37,23 @@ exit:     ret
 
 ;---------Read nRF24L01+ register
 read_nrf_command:
-          push    ZH
-          push    ZL
-          in      ZL,     SPH
-          in      ZH,     SPL
-          
-          
+          push    YH
+          push    YL
+          in      YL,     SPH
+          in      YH,     SPL
+          ldd     temp,   Y+6
+          push    temp
+          cbi     PORTB, SS
+          out     SPDR,   temp
+          rcall wait_SPI_free
+          ;--save temp into variable Status_reg
+          pop     temp
+          cpi     temp,   STATUS
+          breq    exit2          
+          ldd     temp,   Y+5
+          out     SPDR,   temp
+          rcall wait_SPI_free   
+          ;--save temp into variable Status_reg      
+          sbi     PORTB, SS           
+exit2:    ret
+
