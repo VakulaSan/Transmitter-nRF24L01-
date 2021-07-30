@@ -10,8 +10,10 @@
 .equ    SCK  =  5 
     
 
-;---------SPI waiting for 
+
           rjmp    init
+
+;---------SPI waiting for 
 wait_SPI_free:
 wp:       in      temp,   SPSR
           sbrs    temp,   SPIF
@@ -19,7 +21,8 @@ wp:       in      temp,   SPSR
           in      temp,   SPDR
           ret
 
-delay:   ldi    temp1,  3
+;--------Delay
+delay:   ldi    temp1,  1
 
 lp0:      dec     temp1
           breq    exit
@@ -30,4 +33,27 @@ lp2:	     dec     temp2
 lp3:	     dec     temp3 
           breq    lp2
           rjmp    lp3
-exit:      ret
+exit:     ret
+
+;---------Read nRF24L01+ register
+read_nrf_command:
+          push    YH
+          push    YL
+          in      YL,     SPH
+          in      YH,     SPL
+          ldd     temp,   Y+6
+          push    temp
+          cbi     PORTB, SS
+          out     SPDR,   temp
+          rcall wait_SPI_free
+          ;--save temp into variable Status_reg
+          pop     temp
+          cpi     temp,   STATUS
+          breq    exit2          
+          ldd     temp,   Y+5
+          out     SPDR,   temp
+          rcall wait_SPI_free   
+          ;--save temp into variable Status_reg      
+          sbi     PORTB, SS           
+exit2:    ret
+
