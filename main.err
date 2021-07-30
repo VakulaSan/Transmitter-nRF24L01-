@@ -1,0 +1,22 @@
+gavrasm Gerd's AVR assembler version 4.9 (C)2020 by DG4FAC
+----------------------------------------------------------
+Source file: main.asm
+Hex file:    main.hex
+Eeprom file: main.eep
+Compiled:    30.07.2021, 21:26:11
+Pass:        1
+Error ==> <<<<<<< HEAD
+[main.asm,40] 079: Line not starting with a label, a directive or a separator!
+Error ==> =======
+[main.asm,47] 079: Line not starting with a label, a directive or a separator!
+Error ==> lp:       cbi     PORTB, SS
+[main.asm,140] 055: Symbol or register LP already defined!
+Error ==> >>>>>>> d9de1822e2057c8c3d3c25ce1fdd45bc24a284cc
+[main.asm,141] 079: Line not starting with a label, a directive or a separator!
+Error ==> <<<<<<< HEAD
+[main.asm,148] 079: Line not starting with a label, a directive or a separator!
+Error ==> =======
+[main.asm,151] 079: Line not starting with a label, a directive or a separator!
+Error ==> >>>>>>> d9de1822e2057c8c3d3c25ce1fdd45bc24a284cc
+[main.asm,155] 079: Line not starting with a label, a directive or a separator!
+Compilation aborted, 7 errors!
