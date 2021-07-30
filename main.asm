@@ -55,6 +55,15 @@ init:     Initialization
           out     SPDR,   temp
           rcall wait_SPI_free         
           sbi     PORTB, SS 
+          
+          cbi     PORTB, SS
+          ldi     temp,   (FIFO_STATUS)
+          out     SPDR,   temp
+          rcall wait_SPI_free 
+          ldi     temp,   NOP_
+          out     SPDR,   temp
+          rcall wait_SPI_free      
+          sbi     PORTB, SS           
 
           cbi     PORTB, SS
           ldi     temp,   (W_REGISTER) | (RF_SETUP)
