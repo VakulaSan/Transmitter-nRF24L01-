@@ -21,7 +21,7 @@ wp:       in      temp,   SPSR
           in      temp,   SPDR
           ret
 
-;--------Delay
+;--------Delay ms  delay_ms
 delay:   ldi    temp1,  1
 
 lp0:      dec     temp1

@@ -1,0 +1,406 @@
+gavrasm Gerd's AVR assembler version 5.0 (C)2021 by DG4FAC
+----------------------------------------------------------
+Source file: /home/syncrone/Documents/GitHub/Transmitter-nRF24L01-/main.asm
+Hex file:    /home/syncrone/Documents/GitHub/Transmitter-nRF24L01-/main.hex
+Eeprom file: /home/syncrone/Documents/GitHub/Transmitter-nRF24L01-/main.eep
+Compiled:    03.09.2021, 08:45:50
+Pass:        2
+     1: .device  ATmega328p
+     2: .include "macro.inc"
+  Including file macro.inc
+     1: .MACRO    Initialization 
+     2:           ;-------Setup Stack pointer
+     3:           ldi     temp,   high(RAMEND)
+     4:           out     SPH,    temp
+     5:           ldi     temp,   low(RAMEND)
+     6:           out     SPL,    temp
+     7:           ;-------Setup SPI
+     8:           ldi     temp,   (1<<SPIE) | (1<<SPE) | (1<<MSTR)
+     9:           out     SPCR,   temp
+    10:           ldi     temp,   (1<<MOSI) | (1<<SS) | (1<<SCK) | (1<<CE)
+    11:           out     DDRB,   temp
+    12:           
+    13: .ENDMACRO
+  Continuing file /home/syncrone/Documents/GitHub/Transmitter-nRF24L01-/main.asm
+     3: .include "nRF24L01+.inc"
+  Including file nRF24L01+.inc
+     1: .equ R_REGISTER          =  0x00 // + n Прочитать регистр n
+     2: .equ W_REGISTER          =  0x20 // + n Записать регистр n
+     3: .equ R_RX_PAYLOAD        =  0x61 // Принять данные данные из верхнего слота очереди приёмника. 
+     4: .equ W_TX_PAYLOAD        =  0xA0 // Записать в очередь передатчика данные для отправки
+     5: .equ FLUSH_TX            =  0xE1 // Сбросить очередь передатчика
+     6: .equ FLUSH_RX            =  0xE2 // Сбросить очередь приёмника
+     7: .equ REUSE_TX_PL         =  0xE3 // Использовать повторно последний переданный пакет
+     8: .equ R_RX_PL_WID         =  0x60 // Прочитать размер данных принятого пакета в начале очереди приёмника. 
+     9: .equ W_ACK_PAYLOAD       =  0xA8 // + p Записать данные для отправки с пакетом подтверждения по каналу p. 
+    10: .equ W_TX_PAYLOAD_NOACK  =  0xB0 // Записать в очередь передатчика данные, для отправки без подтверждения
+    11: .equ NOP_                =  0xFF // Нет операции. Может быть использовано для чтения регистра статуса
+    12: 
+    13: 
+    14: 
+    15: .equ CONFIG      =  0x00 // Регистр настроек
+    16: .equ EN_AA       =  0x01 // Выбор автоподтверждения
+    17: .equ EN_RXADDR   =  0x02 // Выбор каналов приёмника
+    18: .equ SETUP_AW    =  0x03 // Настройка размера адреса
+    19: .equ SETUP_RETR  =  0x04 // Настройка повторной отправки
+    20: .equ RF_CH       =  0x05 // Номер радиоканала, на котором осуществляется работа. От 0 до 125. 
+    21: .equ RF_SETUP    =  0x06 // Настройка радиоканала
+    22: .equ STATUS      =  0x07 // Регистр статуса. 
+    23: .equ OBSERVE_TX  =  0x08 // Количество повторов передачи и потерянных пакетов
+    24: .equ RPD         =  0x09 // Мощность принимаемого сигнала. Если младший бит = 1, то уровень более -64dBm 
+    25: .equ RX_ADDR_P0  =  0x0A // 3-5 байт (начиная с младшего байта). Адрес канала 0 приёмника. 
+    26: .equ RX_ADDR_P1  =  0x0B // 3-5 байт (начиная с младшего байта). Адрес канала 1 приёмника.
+    27: .equ RX_ADDR_P2  =  0x0C // Младший байт адреса канала 2 приёмника. Старшие байты из RX_ADDR_P1
+    28: .equ RX_ADDR_P3  =  0x0D // Младший байт адреса канала 3 приёмника. Старшие байты из RX_ADDR_P1
+    29: .equ RX_ADDR_P4  =  0x0E // Младший байт адреса канала 4 приёмника. Старшие байты из RX_ADDR_P1
+    30: .equ RX_ADDR_P5  =  0x0F // Младший байт адреса канала 5 приёмника. Старшие байты из RX_ADDR_P1
+    31: .equ TX_ADDR     =  0x10 // 3-5 байт (начиная с младшего байта). Адрес удалённого устройства для передачи
+    32: .equ RX_PW_P0    =  0x11 // Размер данных при приёме по каналу 0: от 1 до 32. 0 - канал не используется.
+    33: .equ RX_PW_P1    =  0x12 // Размер данных при приёме по каналу 1: от 1 до 32. 0 - канал не используется.
+    34: .equ RX_PW_P2    =  0x13 // Размер данных при приёме по каналу 2: от 1 до 32. 0 - канал не используется.
+    35: .equ RX_PW_P3    =  0x14 // Размер данных при приёме по каналу 3: от 1 до 32. 0 - канал не используется.
+    36: .equ RX_PW_P4    =  0x15 // Размер данных при приёме по каналу 4: от 1 до 32. 0 - канал не используется.
+    37: .equ RX_PW_P5    =  0x16 // Размер данных при приёме по каналу 5: от 1 до 32. 0 - канал не используется.
+    38: .equ FIFO_STATUS  = 0x17 // Состояние очередей FIFO приёмника и передатчика
+    39: .equ DYNPD       =  0x1C // Выбор каналов приёмника для которых используется произвольная длина пакетов.
+    40: .equ FEATURE     =  0x1D // Регистр опций
+    41: 
+    42: 
+    43: 
+    44: 
+    45: // CONFIG
+    46: .equ MASK_RX_DR   = 6 // Запрещает прерывание по RX_DR (получение пакета)
+    47: .equ MASK_TX_DS   = 5 // Запрещает прерывание по TX_DS (завершение отправки пакета) 
+    48: .equ MASK_MAX_RT  = 4 // Запрещает прерывание по MAX_RT (превышение числа повторных попыток отправки) 
+    49: .equ EN_CRC       = 3 // Включает CRC
+    50: .equ CRCO         = 2 // Размер поля CRC: 0 - 1 байт; 1 - 2 байта
+    51: .equ PWR_UP       = 1 // Включение питания
+    52: .equ PRIM_RX      = 0 // Выбор режима: 0 - PTX (передатчик) 1 - PRX (приёмник)
+    53: 
+    54: // EN_AA
+    55: .equ ENAA_P5  = 5 // Включает автоподтверждение данных, полученных по каналу 5
+    56: .equ ENAA_P4  = 4 // Включает автоподтверждение данных, полученных по каналу 4
+    57: .equ ENAA_P3  = 3 // Включает автоподтверждение данных, полученных по каналу 3
+    58: .equ ENAA_P2  = 2 // Включает автоподтверждение данных, полученных по каналу 2
+    59: .equ ENAA_P1  = 1 // Включает автоподтверждение данных, полученных по каналу 1
+    60: .equ ENAA_P0  = 0 // Включает автоподтверждение данных, полученных по каналу 0
+    61: 
+    62: // EN_RXADDR
+    63: .equ ERX_P5  = 5 // Включает канал 5 приёмника
+    64: .equ ERX_P4  = 4 // Включает канал 4 приёмника 
+    65: .equ ERX_P3  = 3 // Включает канал 3 приёмника 
+    66: .equ ERX_P2  = 2 // Включает канал 2 приёмника 
+    67: .equ ERX_P1  = 1 // Включает канал 1 приёмника 
+    68: .equ ERX_P0  = 0 // Включает канал 0 приёмника 
+    69: 
+    70: // SETUP_AW
+    71: .equ AW  = 0 // Два бита, Выбирает ширину поля адреса: 1 - 3 байта; 2 - 4 байта; 3 - 5 байт.
+    72: 
+    73: .equ SETUP_AW_3BYTES_ADDRESS  = (1 << AW)
+    74: .equ SETUP_AW_4BYTES_ADDRESS  = (2 << AW)
+    75: .equ SETUP_AW_5BYTES_ADDRESS  = (3 << AW)
+    76: 
+    77: // SETUP_RETR 
+    78: .equ ARD  = 4 // 4 бита. Задаёт значение задержки перед повторной отправкой пакета: 250 x (n + 1) мкс
+    79: .equ ARC  = 0 // 4 битай. Количество повторных попыток отправки, 0 - повторная отправка отключена.
+    80: 
+    81: .equ SETUP_RETR_DELAY_250MKS   = (0 << ARD)
+    82: .equ SETUP_RETR_DELAY_500MKS   = (1 << ARD)
+    83: .equ SETUP_RETR_DELAY_750MKS   = (2 << ARD)
+    84: .equ SETUP_RETR_DELAY_1000MKS  = (3 << ARD)
+    85: .equ SETUP_RETR_DELAY_1250MKS  = (4 << ARD)
+    86: .equ SETUP_RETR_DELAY_1500MKS  = (5 << ARD)
+    87: .equ SETUP_RETR_DELAY_1750MKS  = (6 << ARD)
+    88: .equ SETUP_RETR_DELAY_2000MKS  = (7 << ARD)
+    89: .equ SETUP_RETR_DELAY_2250MKS  = (8 << ARD)
+    90: .equ SETUP_RETR_DELAY_2500MKS  = (9 << ARD)
+    91: .equ SETUP_RETR_DELAY_2750MKS  = (10 << ARD)
+    92: .equ SETUP_RETR_DELAY_3000MKS  = (11 << ARD)
+    93: .equ SETUP_RETR_DELAY_3250MKS  = (12 << ARD)
+    94: .equ SETUP_RETR_DELAY_3500MKS  = (13 << ARD)
+    95: .equ SETUP_RETR_DELAY_3750MKS  = (14 << ARD)
+    96: .equ SETUP_RETR_DELAY_4000MKS  = (15 << ARD)
+    97: 
+    98: .equ SETUP_RETR_NO_RETRANSMIT  = (0 << ARC)
+    99: .equ SETUP_RETR_UP_TO_1_RETRANSMIT  = (1 << ARC)
+   100: .equ SETUP_RETR_UP_TO_2_RETRANSMIT  = (2 << ARC)
+   101: .equ SETUP_RETR_UP_TO_3_RETRANSMIT  = (3 << ARC)
+   102: .equ SETUP_RETR_UP_TO_4_RETRANSMIT  = (4 << ARC)
+   103: .equ SETUP_RETR_UP_TO_5_RETRANSMIT  = (5 << ARC)
+   104: .equ SETUP_RETR_UP_TO_6_RETRANSMIT  = (6 << ARC)
+   105: .equ SETUP_RETR_UP_TO_7_RETRANSMIT  = (7 << ARC)
+   106: .equ SETUP_RETR_UP_TO_8_RETRANSMIT  = (8 << ARC)
+   107: .equ SETUP_RETR_UP_TO_9_RETRANSMIT  = (9 << ARC)
+   108: .equ SETUP_RETR_UP_TO_10_RETRANSMIT  = (10 << ARC)
+   109: .equ SETUP_RETR_UP_TO_11_RETRANSMIT  = (11 << ARC)
+   110: .equ SETUP_RETR_UP_TO_12_RETRANSMIT  = (12 << ARC)
+   111: .equ SETUP_RETR_UP_TO_13_RETRANSMIT  = (13 << ARC)
+   112: .equ SETUP_RETR_UP_TO_14_RETRANSMIT  = (14 << ARC)
+   113: .equ SETUP_RETR_UP_TO_15_RETRANSMIT  = (15 << ARC)
+   114: 
+   115: // RF_SETUP
+   116: .equ CONT_WAVE   =  7 // (Только для nRF24L01+) Непрерывная передача несущей (для тестов)
+   117: .equ RF_DR_LOW   =  5 // (Только для nRF24L01+) Включает скорость 250кбит/с. RF_DR_HIGH должен быть 0
+   118: .equ PLL_LOCK    =  4 // Для тестов
+   119: .equ RF_DR_HIGH  =  3 // Выбор скорости обмена (при значении бита RF_DR_LOW = 0): 0 - 1Мбит/с; 1 - 2Мбит/с
+   120: .equ RF_PWR      =  1 // 2бита. Выбирает мощность передатчика: 0 - -18dBm; 1 - -16dBm; 2 - -6dBm; 3 - 0dBm
+   121: 
+   122: .equ RF_SETUP_MINUS18DBM  = (0 << RF_PWR)
+   123: .equ RF_SETUP_MINUS12DBM  = (1 << RF_PWR)
+   124: .equ RF_SETUP_MINUS6DBM   = (2 << RF_PWR)
+   125: .equ RF_SETUP_0DBM        = (3 << RF_PWR)
+   126: 
+   127: .equ RF_SETUP_1MBPS  = (0 << RF_DR_HIGH)
+   128: .equ RF_SETUP_2MBPS  = (1 << RF_DR_HIGH)
+   129: .equ RF_SETUP_250KBPS  = (1 << RF_DR_LOW) // этот режим не должен использоваться с контролем доставки
+   130: 
+   131: // STATUS
+   132: .equ RX_DR    = 6 // Флаг получения новых данных в FIFO приёмника. Для сброса флага нужно записать 1
+   133: .equ TX_DS    = 5 // Флаг завершения передачи. Для сброса флага нужно записать 1
+   134: .equ MAX_RT   = 4 // Флаг превышения установленного числа повторов. Без сброса (записать 1) обмен невозможен
+   135: .equ RX_P_NO  = 1 // 3 бита. Номер канала, данные для которого доступны в FIFO приёмника. 7 -  FIFO пусто.
+   136: .equ TX_FULL_STATUS  = 0 // Признак заполнения FIFO передатчика: 1 - заполнено; 0 - есть доступные слоты 
+   137:         // (переименовано из TX_FULL во избежание путаницы с одноимённым битом из регистра FIFO_STATUS)
+   138: 
+   139: // OBSERVE_TX
+   140: .equ PLOS_CNT   = 4 // 4 бита. Общее количество пакетов без подтверждения. Сбрасывается записью RF_CH
+   141: .equ ARC_CNT    = 0 // 4 бита. Количество предпринятых повторов при последней отправке. 
+   142: 
+   143: // FIFO_STATUS
+   144: .equ TX_REUSE       = 6 // Признак готовности последнего пакета для повторной отправки. 
+   145: .equ TX_FULL_FIFO   = 5 // Флаг переполнения FIFO очереди передатчика.
+   146:         // (переименовано из TX_FULL во избежание путаницы с одноимённым битом из регистра STATUS)
+   147: .equ TX_EMPTY       = 4 // Флаг освобождения FIFO очереди передатчика.
+   148: .equ RX_FULL        = 1 // Флаг переполнения FIFO очереди приёмника.
+   149: .equ RX_EMPTY       = 0 // Флаг освобождения FIFO очереди приёмника.
+   150: 
+   151: // DYNDP
+   152: .equ DPL_P5  = 5 // Включает приём пакетов произвольной длины по каналу 5
+   153: .equ DPL_P4  = 4 // Включает приём пакетов произвольной длины по каналу 4
+   154: .equ DPL_P3  = 3 // Включает приём пакетов произвольной длины по каналу 3
+   155: .equ DPL_P2  = 2 // Включает приём пакетов произвольной длины по каналу 2
+   156: .equ DPL_P1  = 1 // Включает приём пакетов произвольной длины по каналу 1
+   157: .equ DPL_P0  = 0 // Включает приём пакетов произвольной длины по каналу 0
+   158: 
+   159: // FEATURE  
+   160: .equ EN_DPL       = 2 // Включает поддержку приёма и передачи пакетов произвольной длины
+   161: .equ EN_ACK_PAY   = 1 // Разрешает передачу данных с пакетами подтверждения приёма
+   162: .equ EN_DYN_ACK   = 0 // Разрешает использование W_TX_PAYLOAD_NOACK
+  Continuing file /home/syncrone/Documents/GitHub/Transmitter-nRF24L01-/main.asm
+     4: .include "include.inc"
+  Including file include.inc
+     1: .def      temp = R16
+     2: .def      temp1 = R17
+     3: .def      temp2 = R18
+     4: .def      temp3 = R19
+     5: 
+     6: .equ    CE   =  1 
+     7: .equ    SS   =  2
+     8: .equ    MOSI =  3
+     9: .equ    MISO =  4   
+    10: .equ    SCK  =  5 
+    11:     
+    12: 
+    13: 
+    14: 000000   C021  rjmp    init
+    15: 
+    16: ;---------SPI waiting for 
+    17: wait_SPI_free:
+    18: 000001   B50D  in      temp,   SPSR
+    19: 000002   FF07  sbrs    temp,   SPIF
+    20: 000003   CFFD  rjmp    wp
+    21: 000004   B50E  in      temp,   SPDR
+    22: 000005   9508  ret
+    23: 
+    24: ;--------Delay ms  delay_ms
+    25: 000006   E011  ldi    temp1,  1
+    26: 
+    27: 000007   951A  dec     temp1
+    28: 000008   F039  breq    exit
+    29: 000009   EF2F  ldi     temp2,  255
+    30: 00000A   952A  dec     temp2
+    31: 00000B   F3D9  breq    lp0
+    32: 00000C   EF3F  ldi     temp3,  255
+    33: 00000D   953A  dec     temp3 
+    34: 00000E   F3D9  breq    lp2
+    35: 00000F   CFFD  rjmp    lp3
+    36: 000010   9508  ret
+    37: 
+    38: ;---------Read nRF24L01+ register
+    39: read_nrf_command:
+    40: 000011   93DF  push    YH
+    41: 000012   93CF  push    YL
+    42: 000013   B7CE  in      YL,     SPH
+    43: 000014   B7DD  in      YH,     SPL
+    44: 000015   810E  ldd     temp,   Y+6
+    45: 000016   930F  push    temp
+    46: 000017   982A  cbi     PORTB, SS
+    47: 000018   BD0E  out     SPDR,   temp
+    48: 000019   DFE7  rcall wait_SPI_free
+    49:           ;--save temp into variable Status_reg
+    50: 00001A   910F  pop     temp
+    51: 00001B   3007  cpi     temp,   STATUS
+    52: 00001C   F021  breq    exit2          
+    53: 00001D   810D  ldd     temp,   Y+5
+    54: 00001E   BD0E  out     SPDR,   temp
+    55: 00001F   DFE1  rcall wait_SPI_free   
+    56:           ;--save temp into variable Status_reg      
+    57: 000020   9A2A  sbi     PORTB, SS           
+    58: 000021   9508  ret
+    59: 
+  Continuing file /home/syncrone/Documents/GitHub/Transmitter-nRF24L01-/main.asm
+     5: 
+     6: init:     Initialization
+     7: 00002A   EF0F  ldi     temp,   0xFF
+     8: 00002B   B907  out     DDRC,   temp
+     9: 
+    10: 00002C   DFD9  rcall delay          
+    11:           
+    12: 
+    13: 
+    14: 00002D   982A  cbi     PORTB, SS
+    15: 00002E   E200  ldi     temp,   (W_REGISTER) | (CONFIG)
+    16: 00002F   BD0E  out     SPDR,   temp
+    17: 000030   DFD0  rcall wait_SPI_free          
+    18: 000031   E002  ldi     temp,   (1<<PWR_UP)
+    19: 000032   BD0E  out     SPDR,   temp
+    20: 000033   DFCD  rcall wait_SPI_free         
+    21: 000034   9A2A  sbi     PORTB, SS      
+    22: 
+    23: 000035   DFD0  rcall delay
+    24:           
+    25: 000036   982A  cbi     PORTB, SS
+    26: 000037   E200  ldi     temp,   (W_REGISTER) | (CONFIG)
+    27: 000038   BD0E  out     SPDR,   temp
+    28: 000039   DFC7  rcall wait_SPI_free          
+    29: 00003A   E00B  ldi     temp,   (1<<PWR_UP) | (1<<PRIM_RX) | (1<<EN_CRC) 
+    30: 00003B   BD0E  out     SPDR,   temp
+    31: 00003C   DFC4  rcall wait_SPI_free         
+    32: 00003D   9A2A  sbi     PORTB, SS 
+    33: 
+    34: 00003E   982A  cbi     PORTB, SS
+    35: 00003F   E201  ldi     temp,   (W_REGISTER) | (EN_AA)
+    36: 000040   BD0E  out     SPDR,   temp
+    37: 000041   DFBF  rcall wait_SPI_free          
+    38: 000042   E001  ldi     temp,   (1<<ENAA_P0)   
+    39: 000043   BD0E  out     SPDR,   temp
+    40: 000044   DFBC  rcall wait_SPI_free         
+    41: 000045   9A2A  sbi     PORTB, SS 
+    42: 
+    43: 000046   982A  cbi     PORTB, SS
+    44: 000047   E202  ldi     temp,   (W_REGISTER) | (EN_RXADDR)
+    45: 000048   BD0E  out     SPDR,   temp
+    46: 000049   DFB7  rcall wait_SPI_free          
+    47: 00004A   E001  ldi     temp,   (1<<ERX_P0)   
+    48: 00004B   BD0E  out     SPDR,   temp
+    49: 00004C   DFB4  rcall wait_SPI_free         
+    50: 00004D   9A2A  sbi     PORTB, SS 
+    51: 
+    52: 00004E   982A  cbi     PORTB, SS
+    53: 00004F   E203  ldi     temp,   (W_REGISTER) | (SETUP_AW)
+    54: 000050   BD0E  out     SPDR,   temp
+    55: 000051   DFAF  rcall wait_SPI_free          
+    56: 000052   E003  ldi     temp,   (SETUP_AW_5BYTES_ADDRESS)   
+    57: 000053   BD0E  out     SPDR,   temp
+    58: 000054   DFAC  rcall wait_SPI_free         
+    59: 000055   9A2A  sbi     PORTB, SS 
+    60:           
+    61: 000056   982A  cbi     PORTB, SS
+    62: 000057   E205  ldi     temp,   (W_REGISTER) | (RF_CH)
+    63: 000058   BD0E  out     SPDR,   temp
+    64: 000059   DFA7  rcall wait_SPI_free          
+    65: 00005A   E40C  ldi     temp,   76   
+    66: 00005B   BD0E  out     SPDR,   temp
+    67: 00005C   DFA4  rcall wait_SPI_free         
+    68: 00005D   9A2A  sbi     PORTB, SS 
+    69: 
+    70:                    
+    71: 
+    72: 00005E   982A  cbi     PORTB, SS
+    73: 00005F   E207  ldi     temp,   (W_REGISTER) | (STATUS)
+    74: 000060   BD0E  out     SPDR,   temp
+    75: 000061   DF9F  rcall wait_SPI_free          
+    76: 000062   E700  ldi     temp,   (1<<RX_DR) | (1<<TX_DS) | (1<<MAX_RT)   
+    77: 000063   BD0E  out     SPDR,   temp
+    78: 000064   DF9C  rcall wait_SPI_free         
+    79: 000065   9A2A  sbi     PORTB, SS
+    80: 
+    81: 000066   982A  cbi     PORTB, SS
+    82: 000067   E20A  ldi     temp,   (W_REGISTER) | (RX_ADDR_P0)
+    83: 000068   BD0E  out     SPDR,   temp
+    84: 000069   DF97  rcall wait_SPI_free          
+    85: 00006A   EE07  ldi     temp,   0xE7   
+    86: 00006B   BD0E  out     SPDR,   temp
+    87: 00006C   DF94  rcall wait_SPI_free  
+    88: 00006D   EE07  ldi     temp,   0xE7   
+    89: 00006E   BD0E  out     SPDR,   temp
+    90: 00006F   DF91  rcall wait_SPI_free
+    91: 000070   EE07  ldi     temp,   0xE7   
+    92: 000071   BD0E  out     SPDR,   temp
+    93: 000072   DF8E  rcall wait_SPI_free
+    94: 000073   EE07  ldi     temp,   0xE7   
+    95: 000074   BD0E  out     SPDR,   temp
+    96: 000075   DF8B  rcall wait_SPI_free
+    97: 000076   EE07  ldi     temp,   0xE7   
+    98: 000077   BD0E  out     SPDR,   temp
+    99: 000078   DF88  rcall wait_SPI_free
+   100: 000079   9A2A  sbi     PORTB, SS 
+   101: 
+   102: 00007A   982A  cbi     PORTB, SS
+   103: 00007B   E300  ldi     temp,   (W_REGISTER) | (TX_ADDR)
+   104: 00007C   BD0E  out     SPDR,   temp
+   105: 00007D   DF83  rcall wait_SPI_free          
+   106: 00007E   EE07  ldi     temp,   0xE7   
+   107: 00007F   BD0E  out     SPDR,   temp
+   108: 000080   DF80  rcall wait_SPI_free  
+   109: 000081   EE07  ldi     temp,   0xE7   
+   110: 000082   BD0E  out     SPDR,   temp
+   111: 000083   DF7D  rcall wait_SPI_free
+   112: 000084   EE07  ldi     temp,   0xE7   
+   113: 000085   BD0E  out     SPDR,   temp
+   114: 000086   DF7A  rcall wait_SPI_free
+   115: 000087   EE07  ldi     temp,   0xE7   
+   116: 000088   BD0E  out     SPDR,   temp
+   117: 000089   DF77  rcall wait_SPI_free
+   118: 00008A   EE07  ldi     temp,   0xE7   
+   119: 00008B   BD0E  out     SPDR,   temp
+   120: 00008C   DF74  rcall wait_SPI_free
+   121: 00008D   9A2A  sbi     PORTB, SS 
+   122: 
+   123: 
+   124: 00008E   982A  cbi     PORTB, SS
+   125: 00008F   E301  ldi     temp,   (W_REGISTER) | (RX_PW_P0)
+   126: 000090   BD0E  out     SPDR,   temp
+   127: 000091   DF6F  rcall wait_SPI_free          
+   128: 000092   E001  ldi     temp,   0x01   
+   129: 000093   BD0E  out     SPDR,   temp
+   130: 000094   DF6C  rcall wait_SPI_free         
+   131: 000095   9A2A  sbi     PORTB, SS
+   132: 
+   133: 
+   134: 000096   982A  cbi     PORTB, SS
+   135: 000097   E601  ldi     temp,   R_RX_PAYLOAD
+   136: 000098   BD0E  out     SPDR,   temp
+   137: 000099   DF67  rcall wait_SPI_free          
+   138: 00009A   EF0F  ldi     temp,   NOP_
+   139: 00009B   BD0E  out     SPDR,   temp
+   140: 00009C   DF64  rcall wait_SPI_free         
+   141: 00009D   9A2A  sbi     PORTB, SS 
+   142: 
+   143: 00009E   B908  out     PORTC, temp  ; Enable/disable LED
+   144: 
+   145: 00009F   DF66  rcall delay       
+   146:            
+   147: 0000A0   CFF5  rjmp lp
+   148: 
+   149: 
+   150:           
+ -> Warning 001: 103 symbol(s) defined, but not used!
+
+Program             :      161 words.
+Constants           :        0 words.
+Total program memory:      161 words.
+Eeprom space        :        0 bytes.
+Data segment        :        0 bytes.
+Compilation completed, no errors.
+Compilation ended 03.09.2021, 08:45:50
